@@ -1,10 +1,10 @@
-#### 网易云音乐自动听歌打卡，直冲LV10
+## 网易云音乐自动听歌打卡，直冲LV10
 
 ​	本项目基于[GayHub上的项目](https://github.com/ZainCheung/netease-cloud)，在此感谢原作者的付出，因为本人下载后发现不能正常使用，因此在原作上基础上修改了部分BUG，适配了网易云的最新API，使打卡功能可正常使用。
 
 
 
-#### 项目主要文件说明
+## 项目主要文件说明
 
 account.json   开启多账号功能，此处存放多个账号信息
 
@@ -18,7 +18,7 @@ run.log	项目日志文件
 
 
 
-#### 使用方法
+## 使用方法
 
 **使用前必须先部署[NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi),部署完成后将部署地址填入init.config文件中的api字段内。**
 
@@ -32,7 +32,7 @@ run.log	项目日志文件
 
 
 
-#### 说明&截图
+## 说明&截图
 
 **本项目仅供学习交流使用，若发现BUG或有新的需求请提issues，我看到后会及时处理，若感觉本项目对您有帮助请给一颗star，谢谢。**
 
