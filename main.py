@@ -37,7 +37,7 @@ class Task(object):
     music_list = []
     al_music_list = []
 
-    def __init__(self, uin, pwd, pushmethod, sckey, appToken, wxpusheruid, barkServer, barkKey, countrycode, al_id):
+    def __init__(self, uin, pwd, al_id, pushmethod, sckey, appToken, wxpusheruid, barkServer, barkKey, countrycode):
         self.uin = uin
         self.pwd = pwd
         self.al_id = al_id
