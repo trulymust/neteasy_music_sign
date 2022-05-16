@@ -36,6 +36,6 @@ run.log	项目日志文件
 
 **本项目仅供学习交流使用，若发现BUG或有新的需求请提issues，我看到后会及时处理，若感觉本项目对您有帮助请给一颗star，谢谢。**
 
-![](E:\netease-cloud-music-sign\image-20220516134035852.png)
+![](image-20220516134035852.png)
 
-![](E:\netease-cloud-music-sign\image-20220516134054150.png)
+![](image-20220516134054150.png)
