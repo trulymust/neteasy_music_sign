@@ -1,11 +1,3 @@
-#coding:utf-8
-'''
-@author: ZainCheung
-@LastEditors: ZainCheung
-@description:网易云音乐全自动每日打卡300首歌升级账号等级,使用前请先到init.config文件配置
-@Date: 2020-06-25 14:28:48
-@LastEditTime: 2020-09-01 18:20:00
-'''
 from configparser import ConfigParser
 from threading import Timer
 import requests 
@@ -273,10 +265,26 @@ class Task(object):
         try:
             self.list = []
             self.list.append("- 初始化完成\n\n")
-            self.login()
-            self.sign()
-            self.detail()
-            self.allmus()
+            try:
+                self.login()
+            except:
+                print('\n\n', '登陆失败', '\n\n')
+                return
+            try:
+                self.sign()
+            except:
+                print('\n\n', '签到失败', '\n\n')
+                return
+            try:
+                self.detail()
+            except:
+                print('\n\n', '获取详情失败', '\n\n')
+                return
+            try:
+                self.allmus()
+            except:
+                print('\n\n', '所选歌单数量小于300', '\n\n')
+                return
             counter  = self.listenSongs
             self.list.append("- 开始打卡\n\n")
             for i in range(3, 300):
