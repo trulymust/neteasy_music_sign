@@ -408,7 +408,7 @@ def taskPool():
         for man in account:
             print('账号: ' + man['account'] + '  开始执行')
             logging.info('账号: ' + man['account'] + '  开始执行========================================')
-            task = Task(man['account'], man['password'], man['pushmethod'], man['sckey'], man['appToken'], man['wxpusheruid'], man['barkServer'], man['barkKey'], man['countrycode'])
+            task = Task(man['account'], man['password'], man['al_id'], man['pushmethod'], man['sckey'], man['appToken'], man['wxpusheruid'], man['barkServer'], man['barkKey'], man['countrycode'])
             task.start()
             time.sleep(10)
         print('所有账号已全部完成任务,服务进入休眠中,等待明天重新启动')
