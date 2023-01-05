@@ -1,0 +1,17 @@
+version: '3'
+services:
+  # 网易云API
+  service-musicapi:
+    container_name: service-musicapi
+    hostname: service-musicapi
+    image: binaryify/netease_cloud_music_api:v4.8.7
+    restart: always
+
+  # 网易云每日打卡
+  service-musicsign:
+    container_name: service-musicsign
+    hostname: service-musicsign
+    image: sage668/neteasy_music_sign:latest
+    restart: always
+    volumes:
+      - ./init.config:/app/init.config
