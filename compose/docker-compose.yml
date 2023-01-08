@@ -13,5 +13,7 @@ services:
     hostname: service-musicsign
     image: sage668/neteasy_music_sign:latest
     restart: always
+    depends_on:
+      - service-musicapi
     volumes:
       - ./init.config:/app/init.config
