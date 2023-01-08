@@ -29,7 +29,7 @@ class Task(object):
     music_list = []
     al_music_list = []
 
-    song_list_offset = 1
+    song_list_offset = 0
 
     def __init__(self, uin, pwd, al_id, pushmethod, sckey, appToken, wxpusheruid, barkServer, barkKey, countrycode):
         self.uin = uin
@@ -104,10 +104,9 @@ class Task(object):
             self.music_list.append(json_dict['songs'][i]['id'])
             self.al_music_list.append(json_dict['songs'][i]['al']['id'])
 
-        start_song_index = ((self.song_list_offset * 300) - 300)
-        print('歌单获取成功，本次将从第 ' + start_song_index + 1 + '首歌曲开始打卡！')
-        print('歌曲id为：' + self.music_list[start_song_index])
-        self.song_list_offset += 1
+        print('歌单获取成功，本次将从第 ' + str(self.song_list_offset + 1) + '首歌曲开始打卡！')
+        print('歌曲id为：' + str(self.music_list[0]))
+        self.song_list_offset += 300
 
     '''
     每日打卡300首歌
