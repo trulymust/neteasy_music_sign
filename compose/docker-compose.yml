@@ -5,7 +5,7 @@ services:
     container_name: service-musicapi
     hostname: service-musicapi
     image: binaryify/netease_cloud_music_api:v4.8.7
-    restart: always
+    restart: unless-stopped
     volumes:
     - /etc/localtime:/etc/localtime
     - /etc/timezone:/etc/timezone
@@ -15,7 +15,7 @@ services:
     container_name: service-musicsign
     hostname: service-musicsign
     image: sage668/neteasy_music_sign:latest
-    restart: always
+    restart: unless-stopped
     depends_on:
       - service-musicapi
     volumes:
