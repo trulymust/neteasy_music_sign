@@ -29,6 +29,8 @@ class Task(object):
     music_list = []
     al_music_list = []
 
+    song_list_offset = 1
+
     def __init__(self, uin, pwd, al_id, pushmethod, sckey, appToken, wxpusheruid, barkServer, barkKey, countrycode):
         self.uin = uin
         self.pwd = pwd
@@ -95,14 +97,16 @@ class Task(object):
     获取歌单里全部歌曲id
     '''
     def allmus(self):
-        url = url = api + 'playlist/track/all?id=' + str(self.al_id) + '&limit=300&offset=1'
+        url = url = api + 'playlist/track/all?id=' + str(self.al_id) + '&limit=300&offset=' + str(self.song_list_offset)
         response = self.getResponse(url, {"r":random.random()})
         json_dict = json.loads(response.text)
         for i in range(0, 300):
             self.music_list.append(json_dict['songs'][i]['id'])
-            self.al_music_list.append(json_dict['songs'][i]['al']['id']) 
-        print(self.al_music_list)
-        print(self.music_list)
+            self.al_music_list.append(json_dict['songs'][i]['al']['id'])
+
+        print('歌单获取成功，本次将从第 ' + (((self.song_list_offset * 300) - 300) + 1) + '首歌曲开始打卡！')
+        self.song_list_offset += 1
+
     '''
     每日打卡300首歌
     '''
@@ -291,8 +295,9 @@ class Task(object):
                 self.daka(i)
                # self.log('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠30秒')
                 self.log('第' + str(i) + '次打卡成功')
-                logging.info('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠10秒')
-                time.sleep(62)
+                sleep_time = 60 + random.randint(5, 30)
+                logging.info('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠' + sleep_time + '秒')
+                time.sleep(sleep_time)
                 self.dakanum =i
                 self.detail()
                 self.dakaSongs = self.listenSongs - counter
