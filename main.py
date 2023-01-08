@@ -297,7 +297,7 @@ class Task(object):
                # self.log('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠30秒')
                 self.log('第' + str(i) + '次打卡成功')
                 sleep_time = 60 + random.randint(5, 30)
-                logging.info('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠' + sleep_time + '秒')
+                logging.info('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠' + str(sleep_time) + '秒')
                 time.sleep(sleep_time)
                 self.dakanum =i
                 self.detail()
