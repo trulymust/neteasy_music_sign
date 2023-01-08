@@ -6,6 +6,9 @@ services:
     hostname: service-musicapi
     image: binaryify/netease_cloud_music_api:v4.8.7
     restart: always
+    volumes:
+    - localtime=/etc/localtime:/etc/localtime
+    - timezone=/etc/timezone:/etc/timezone
 
   # 网易云每日打卡
   service-musicsign:
@@ -17,3 +20,5 @@ services:
       - service-musicapi
     volumes:
       - ./init.config:/app/init.config
+      - localtime=/etc/localtime:/etc/localtime
+      - timezone=/etc/timezone:/etc/timezone
