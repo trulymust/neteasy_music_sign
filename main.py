@@ -105,8 +105,8 @@ class Task(object):
             self.music_list.append(json_dict['songs'][i]['id'])
             self.al_music_list.append(json_dict['songs'][i]['al']['id'])
 
-        print('歌单获取成功，本次将从第 ' + str(songListOffset + 1) + '首歌曲开始打卡！')
-        print('歌曲id为：' + str(self.music_list[0]))
+        logging.info('歌单获取成功，本次将从第 ' + str(songListOffset + 1) + '首歌曲开始打卡！')
+        logging.info('歌曲id为：' + str(self.music_list[0]))
         self.songListOffset += 300
 
     '''
@@ -327,9 +327,9 @@ class Task(object):
                 self.log('用户任务执行中断,请检查账号密码是否正确')
                 logging.error('用户任务执行中断,请检查账号密码是否正确========================================')
                 retry_count += 1
-                print('60秒后开始重试，最大尝试3次')
+                logging.info('60秒后开始重试，最大尝试3次')
                 time.sleep(60)
-                print('当前是第：' + retry_counte + '次数重试')
+                logging.info('当前是第：' + retry_counte + '次数重试')
             else:
                 self.log('用户:' + self.name + '  今日任务已完成')
                 logging.info('用户:' + self.name + '  今日任务已完成========================================')
