@@ -19,6 +19,9 @@ logging.basicConfig(stream=logFile, format="%(asctime)s %(levelname)s:%(message)
 grade = [10,40,70,130,200,400,1000,3000,8000,20000]
 api = ''
 
+# 全局变量控制歌单游标
+songListOffset = 0
+
 class Task(object):
     
     '''
@@ -28,8 +31,6 @@ class Task(object):
     music_num_id = 0
     music_list = []
     al_music_list = []
-
-    song_list_offset = 0
 
     def __init__(self, uin, pwd, al_id, pushmethod, sckey, appToken, wxpusheruid, barkServer, barkKey, countrycode):
         self.uin = uin
@@ -97,16 +98,16 @@ class Task(object):
     获取歌单里全部歌曲id
     '''
     def allmus(self):
-        url = url = api + 'playlist/track/all?id=' + str(self.al_id) + '&limit=300&offset=' + str(self.song_list_offset)
+        url = url = api + 'playlist/track/all?id=' + str(self.al_id) + '&limit=300&offset=' + str(songListOffset)
         response = self.getResponse(url, {"r":random.random()})
         json_dict = json.loads(response.text)
         for i in range(0, 300):
             self.music_list.append(json_dict['songs'][i]['id'])
             self.al_music_list.append(json_dict['songs'][i]['al']['id'])
 
-        print('歌单获取成功，本次将从第 ' + str(self.song_list_offset + 1) + '首歌曲开始打卡！')
+        print('歌单获取成功，本次将从第 ' + str(songListOffset + 1) + '首歌曲开始打卡！')
         print('歌曲id为：' + str(self.music_list[0]))
-        self.song_list_offset += 300
+        self.songListOffset += 300
 
     '''
     每日打卡300首歌
@@ -267,65 +268,72 @@ class Task(object):
     开始执行
     '''
     def start(self):
-        try:
-            self.list = []
-            self.list.append("- 初始化完成\n\n")
+        retry_count = 0
+        while retry_count <= 3:
             try:
-                self.login()
-            except:
-                print('\n\n', '登陆失败', '\n\n')
-                return
-            try:
-                self.sign()
-            except:
-                print('\n\n', '签到失败', '\n\n')
-                return
-            try:
-                self.detail()
-            except:
-                print('\n\n', '获取详情失败', '\n\n')
-                return
-            try:
-                self.allmus()
-            except:
-                print('\n\n', '所选歌单数量小于300', '\n\n')
-                return
-            counter  = self.listenSongs
-            self.list.append("- 开始打卡\n\n")
-            for i in range(3, 300):
-                self.daka(i)
-               # self.log('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠30秒')
-                self.log('第' + str(i) + '次打卡成功')
-                sleep_time = 60 + random.randint(5, 30)
-                logging.info('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠' + str(sleep_time) + '秒')
-                time.sleep(sleep_time)
-                self.dakanum =i
-                self.detail()
-                self.dakaSongs = self.listenSongs - counter
-                self.log('今日已打卡' + str(self.dakaSongs) + '首')
-                if self.dakaSongs == 300:
-                    break
+                self.list = []
+                self.list.append("- 初始化完成\n\n")
+                try:
+                    self.login()
+                except:
+                    print('\n\n', '登陆失败', '\n\n')
+                    return
+                try:
+                    self.sign()
+                except:
+                    print('\n\n', '签到失败', '\n\n')
+                    return
+                try:
+                    self.detail()
+                except:
+                    print('\n\n', '获取详情失败', '\n\n')
+                    return
+                try:
+                    self.allmus()
+                except:
+                    print('\n\n', '所选歌单数量小于300', '\n\n')
+                    return
+                counter  = self.listenSongs
+                self.list.append("- 开始打卡\n\n")
+                for i in range(3, 300):
+                    self.daka(i)
+                   # self.log('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠30秒')
+                    self.log('第' + str(i) + '次打卡成功')
+                    sleep_time = 60 + random.randint(5, 30)
+                    logging.info('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠' + str(sleep_time) + '秒')
+                    time.sleep(sleep_time)
+                    self.dakanum =i
+                    self.detail()
+                    self.dakaSongs = self.listenSongs - counter
+                    self.log('今日已打卡' + str(self.dakaSongs) + '首')
+                    if self.dakaSongs == 300:
+                        break
 
-            if self.listenSongs >= 20000:
-                self.day = 0
+                if self.listenSongs >= 20000:
+                    self.day = 0
+                else:
+                    self.day = math.ceil((20000 - self.listenSongs)/300)
+
+                self.list.append("- 打卡结束\n\n")
+                self.list.append("- 消息推送\n\n")
+                self.dakaSongs_list = ''.join(self.list)
+                if self.pushmethod.lower() == 'wxpusher':
+                    self.wxpusher()
+                elif self.pushmethod.lower() == 'bark':
+                    self.bark()
+                else:
+                    self.server()
+            except:
+                self.log('用户任务执行中断,请检查账号密码是否正确')
+                logging.error('用户任务执行中断,请检查账号密码是否正确========================================')
+                retry_count += 1
+                print('60秒后开始重试，最大尝试3次')
+                time.sleep(60)
+                print('当前是第：' + retry_counte + '次数重试')
             else:
-                self.day = math.ceil((20000 - self.listenSongs)/300)
-            
-            self.list.append("- 打卡结束\n\n")
-            self.list.append("- 消息推送\n\n")
-            self.dakaSongs_list = ''.join(self.list)
-            if self.pushmethod.lower() == 'wxpusher':
-                self.wxpusher()
-            elif self.pushmethod.lower() == 'bark':
-                self.bark()
-            else:
-                self.server()
-        except:
-            self.log('用户任务执行中断,请检查账号密码是否正确')
-            logging.error('用户任务执行中断,请检查账号密码是否正确========================================')
-        else:
-            self.log('用户:' + self.name + '  今日任务已完成')
-            logging.info('用户:' + self.name + '  今日任务已完成========================================')
+                self.log('用户:' + self.name + '  今日任务已完成')
+                logging.info('用户:' + self.name + '  今日任务已完成========================================')
+                retry_count = 3
             
         
 '''
