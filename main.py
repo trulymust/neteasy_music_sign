@@ -95,6 +95,7 @@ class Task(object):
     获取歌单里全部歌曲id
     '''
     def allmus(self):
+        global songListOffset
         url = url = api + 'playlist/track/all?id=' + str(self.al_id) + '&limit=300&offset=' + str(songListOffset)
         response = self.getResponse(url, {"r":random.random()})
         json_dict = json.loads(response.text)
@@ -104,7 +105,7 @@ class Task(object):
 
         logging.info('歌单获取成功，本次将从第 ' + str(songListOffset + 1) + '首歌曲开始打卡！')
         logging.info('歌曲id为：' + str(self.music_list[0]))
-        self.songListOffset += 300
+        songListOffset += 300
 
     '''
     每日打卡300首歌
@@ -429,7 +430,7 @@ def taskPool():
 '''
 if __name__ == '__main__':
     while True:
-        logging.info('10秒后启动')
+        logging.info('10秒后程序启动')
         time.sleep(10)
         Timer(0, taskPool, ()).start()
         time.sleep(60*60*24) # 间隔一天
