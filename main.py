@@ -64,9 +64,7 @@ class Task(object):
             url = api + '?do=email'
         else:
             url = api + 'login/cellphone?phone='+ str(self.uin) + '&password=' + str(self.pwd)
-        print('url is', url, data)
         response = requests.post(url, data=data, headers={'Content-Type':'application/x-www-form-urlencoded'})
-        print('response is ', response)
         code = json.loads(response.text)['code']
         self.name = json.loads(response.text)['profile']['nickname']
         self.uid = json.loads(response.text)['account']['id']
@@ -83,7 +81,6 @@ class Task(object):
     '''
     def sign(self):
         url = api + 'daily_signin'
-        print('url is ', url)
         response = self.getResponse(url, {"r":random.random()})
         data = json.loads(response.text)
         if data['code'] == 200:
@@ -114,7 +111,6 @@ class Task(object):
     '''
     def daka(self, num):
         url = api + 'scrobble?id='+str(self.music_list[num])+'&sourceid='+str(self.al_music_list[num])+'&time=61'
-        print(url)
         response = self.getResponse(url, {"r":random.random()})
         self.music_num_id += 1
 
@@ -124,7 +120,6 @@ class Task(object):
     def detail(self):
         url = api + 'user/detail'
         data = {"uid":self.uid, "r":random.random()}
-        print(url)
         response = self.getResponse(url, data)
         data = json.loads(response.text)
         self.level = data['level']
@@ -276,22 +271,22 @@ class Task(object):
                 try:
                     self.login()
                 except:
-                    print('\n\n', '登陆失败', '\n\n')
+                    logging.error('\n\n', '登陆失败', '\n\n')
                     return
                 try:
                     self.sign()
                 except:
-                    print('\n\n', '签到失败', '\n\n')
+                    logging.error('\n\n', '签到失败', '\n\n')
                     return
                 try:
                     self.detail()
                 except:
-                    print('\n\n', '获取详情失败', '\n\n')
+                    logging.error('\n\n', '获取详情失败', '\n\n')
                     return
                 try:
                     self.allmus()
                 except:
-                    print('\n\n', '所选歌单数量小于300', '\n\n')
+                    logging.error('\n\n', '所选歌单数量小于300', '\n\n')
                     return
                 counter  = self.listenSongs
                 self.list.append("- 开始打卡\n\n")
@@ -357,7 +352,6 @@ def init():
     wxpusheruid = config['setting']['wxpusheruid']
     barkServer = config['setting']['barkServer']
     barkKey = config['setting']['barkKey']
-    print('配置文件读取完毕')
     logging.info('配置文件读取完毕')
     conf = {
             'uin': uin,
@@ -402,10 +396,8 @@ def check():
     url = api + '?do=check'
     respones = requests.get(url)
     if respones.status_code == 200:
-        print('api测试正常')
         logging.info('api测试正常')
     else:
-        print('api测试异常')
         logging.error('api测试异常')
 
 '''
@@ -416,22 +408,17 @@ def taskPool():
     config = init()
     check() # 每天对api做一次检查
     if config['peopleSwitch'] is True:
-        print('多人开关已打开,即将开始执行多人任务')
         logging.info('多人开关已打开,即将执行进行多人任务')
         account = loadJson("account.json")
         for man in account:
-            print('账号: ' + man['account'] + '  开始执行')
             logging.info('账号: ' + man['account'] + '  开始执行========================================')
             task = Task(man['account'], man['password'], man['al_id'], man['pushmethod'], man['sckey'], man['appToken'], man['wxpusheruid'], man['barkServer'], man['barkKey'], man['countrycode'])
             task.start()
             time.sleep(10)
-        print('所有账号已全部完成任务,服务进入休眠中,等待明天重新启动')
         logging.info('所有账号已全部完成任务,服务进入休眠中,等待明天重新启动')
     else :
-        print('账号: ' + config['uin'] + '  开始执行')
         logging.info('账号: ' + config['uin'] + '  开始执行========================================')
         if config['md5Switch'] is True:
-            print('MD5开关已打开,即将开始为你加密,密码不会上传至服务器,请知悉')
             logging.info('MD5开关已打开,即将开始为你加密,密码不会上传至服务器,请知悉')
             config['pwd'] = md5(config['pwd'])
         task = Task(config['uin'], config['pwd'], config['al_id'], config['pushmethod'], config['sckey'], config['appToken'], config['wxpusheruid'], config['barkServer'], config['barkKey'], config['countrycode'])
@@ -442,6 +429,7 @@ def taskPool():
 '''
 if __name__ == '__main__':
     while True:
+        logging.info('10秒后启动')
         time.sleep(10)
         Timer(0, taskPool, ()).start()
         time.sleep(60*60*24) # 间隔一天
