@@ -19,6 +19,9 @@ logging.basicConfig(stream=logFile, format="%(asctime)s %(levelname)s:%(message)
 grade = [10,40,70,130,200,400,1000,3000,8000,20000]
 api = ''
 
+# 全局变量控制歌单游标
+songListOffset = 0
+
 class Task(object):
     
     '''
@@ -61,9 +64,7 @@ class Task(object):
             url = api + '?do=email'
         else:
             url = api + 'login/cellphone?phone='+ str(self.uin) + '&password=' + str(self.pwd)
-        print('url is', url, data)
         response = requests.post(url, data=data, headers={'Content-Type':'application/x-www-form-urlencoded'})
-        print('response is ', response)
         code = json.loads(response.text)['code']
         self.name = json.loads(response.text)['profile']['nickname']
         self.uid = json.loads(response.text)['account']['id']
@@ -80,7 +81,6 @@ class Task(object):
     '''
     def sign(self):
         url = api + 'daily_signin'
-        print('url is ', url)
         response = self.getResponse(url, {"r":random.random()})
         data = json.loads(response.text)
         if data['code'] == 200:
@@ -95,20 +95,23 @@ class Task(object):
     获取歌单里全部歌曲id
     '''
     def allmus(self):
-        url = url = api + 'playlist/track/all?id=' + str(self.al_id) + '&limit=300&offset=1'
+        global songListOffset
+        url = url = api + 'playlist/track/all?id=' + str(self.al_id) + '&limit=300&offset=' + str(songListOffset)
         response = self.getResponse(url, {"r":random.random()})
         json_dict = json.loads(response.text)
         for i in range(0, 300):
             self.music_list.append(json_dict['songs'][i]['id'])
-            self.al_music_list.append(json_dict['songs'][i]['al']['id']) 
-        print(self.al_music_list)
-        print(self.music_list)
+            self.al_music_list.append(json_dict['songs'][i]['al']['id'])
+
+        logging.info('歌单获取成功，本次将从第 ' + str(songListOffset + 1) + '首歌曲开始打卡！')
+        logging.info('歌曲id为：' + str(self.music_list[0]))
+        songListOffset += 300
+
     '''
     每日打卡300首歌
     '''
     def daka(self, num):
         url = api + 'scrobble?id='+str(self.music_list[num])+'&sourceid='+str(self.al_music_list[num])+'&time=61'
-        print(url)
         response = self.getResponse(url, {"r":random.random()})
         self.music_num_id += 1
 
@@ -118,7 +121,6 @@ class Task(object):
     def detail(self):
         url = api + 'user/detail'
         data = {"uid":self.uid, "r":random.random()}
-        print(url)
         response = self.getResponse(url, data)
         data = json.loads(response.text)
         self.level = data['level']
@@ -262,64 +264,72 @@ class Task(object):
     开始执行
     '''
     def start(self):
-        try:
-            self.list = []
-            self.list.append("- 初始化完成\n\n")
+        retry_count = 0
+        while retry_count <= 3:
             try:
-                self.login()
-            except:
-                print('\n\n', '登陆失败', '\n\n')
-                return
-            try:
-                self.sign()
-            except:
-                print('\n\n', '签到失败', '\n\n')
-                return
-            try:
-                self.detail()
-            except:
-                print('\n\n', '获取详情失败', '\n\n')
-                return
-            try:
-                self.allmus()
-            except:
-                print('\n\n', '所选歌单数量小于300', '\n\n')
-                return
-            counter  = self.listenSongs
-            self.list.append("- 开始打卡\n\n")
-            for i in range(3, 300):
-                self.daka(i)
-               # self.log('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠30秒')
-                self.log('第' + str(i) + '次打卡成功')
-                logging.info('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠10秒')
-                time.sleep(62)
-                self.dakanum =i
-                self.detail()
-                self.dakaSongs = self.listenSongs - counter
-                self.log('今日已打卡' + str(self.dakaSongs) + '首')
-                if self.dakaSongs == 300:
-                    break
+                self.list = []
+                self.list.append("- 初始化完成\n\n")
+                try:
+                    self.login()
+                except:
+                    logging.error('\n\n', '登陆失败', '\n\n')
+                    return
+                try:
+                    self.sign()
+                except:
+                    logging.error('\n\n', '签到失败', '\n\n')
+                    return
+                try:
+                    self.detail()
+                except:
+                    logging.error('\n\n', '获取详情失败', '\n\n')
+                    return
+                try:
+                    self.allmus()
+                except:
+                    logging.error('\n\n', '所选歌单数量小于300', '\n\n')
+                    return
+                counter  = self.listenSongs
+                self.list.append("- 开始打卡\n\n")
+                for i in range(3, 300):
+                    self.daka(i)
+                   # self.log('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠30秒')
+                    self.log('第' + str(i) + '次打卡成功')
+                    sleep_time = 60 + random.randint(5, 30)
+                    logging.info('用户:' + self.name + '  第' + str(i) + '次打卡成功,即将休眠' + str(sleep_time) + '秒')
+                    time.sleep(sleep_time)
+                    self.dakanum =i
+                    self.detail()
+                    self.dakaSongs = self.listenSongs - counter
+                    self.log('今日已打卡' + str(self.dakaSongs) + '首')
+                    if self.dakaSongs == 300:
+                        break
 
-            if self.listenSongs >= 20000:
-                self.day = 0
+                if self.listenSongs >= 20000:
+                    self.day = 0
+                else:
+                    self.day = math.ceil((20000 - self.listenSongs)/300)
+
+                self.list.append("- 打卡结束\n\n")
+                self.list.append("- 消息推送\n\n")
+                self.dakaSongs_list = ''.join(self.list)
+                if self.pushmethod.lower() == 'wxpusher':
+                    self.wxpusher()
+                elif self.pushmethod.lower() == 'bark':
+                    self.bark()
+                else:
+                    self.server()
+            except:
+                self.log('用户任务执行中断,请检查账号密码是否正确')
+                logging.error('用户任务执行中断,请检查账号密码是否正确========================================')
+                retry_count += 1
+                logging.info('60秒后开始重试，最大尝试3次')
+                time.sleep(60)
+                logging.info('当前是第：' + retry_counte + '次数重试')
             else:
-                self.day = math.ceil((20000 - self.listenSongs)/300)
-            
-            self.list.append("- 打卡结束\n\n")
-            self.list.append("- 消息推送\n\n")
-            self.dakaSongs_list = ''.join(self.list)
-            if self.pushmethod.lower() == 'wxpusher':
-                self.wxpusher()
-            elif self.pushmethod.lower() == 'bark':
-                self.bark()
-            else:
-                self.server()
-        except:
-            self.log('用户任务执行中断,请检查账号密码是否正确')
-            logging.error('用户任务执行中断,请检查账号密码是否正确========================================')
-        else:
-            self.log('用户:' + self.name + '  今日任务已完成')
-            logging.info('用户:' + self.name + '  今日任务已完成========================================')
+                self.log('用户:' + self.name + '  今日任务已完成')
+                logging.info('用户:' + self.name + '  今日任务已完成========================================')
+                retry_count = 3
             
         
 '''
@@ -343,7 +353,6 @@ def init():
     wxpusheruid = config['setting']['wxpusheruid']
     barkServer = config['setting']['barkServer']
     barkKey = config['setting']['barkKey']
-    print('配置文件读取完毕')
     logging.info('配置文件读取完毕')
     conf = {
             'uin': uin,
@@ -388,10 +397,8 @@ def check():
     url = api + '?do=check'
     respones = requests.get(url)
     if respones.status_code == 200:
-        print('api测试正常')
         logging.info('api测试正常')
     else:
-        print('api测试异常')
         logging.error('api测试异常')
 
 '''
@@ -402,22 +409,17 @@ def taskPool():
     config = init()
     check() # 每天对api做一次检查
     if config['peopleSwitch'] is True:
-        print('多人开关已打开,即将开始执行多人任务')
         logging.info('多人开关已打开,即将执行进行多人任务')
         account = loadJson("account.json")
         for man in account:
-            print('账号: ' + man['account'] + '  开始执行')
             logging.info('账号: ' + man['account'] + '  开始执行========================================')
             task = Task(man['account'], man['password'], man['al_id'], man['pushmethod'], man['sckey'], man['appToken'], man['wxpusheruid'], man['barkServer'], man['barkKey'], man['countrycode'])
             task.start()
             time.sleep(10)
-        print('所有账号已全部完成任务,服务进入休眠中,等待明天重新启动')
         logging.info('所有账号已全部完成任务,服务进入休眠中,等待明天重新启动')
     else :
-        print('账号: ' + config['uin'] + '  开始执行')
         logging.info('账号: ' + config['uin'] + '  开始执行========================================')
         if config['md5Switch'] is True:
-            print('MD5开关已打开,即将开始为你加密,密码不会上传至服务器,请知悉')
             logging.info('MD5开关已打开,即将开始为你加密,密码不会上传至服务器,请知悉')
             config['pwd'] = md5(config['pwd'])
         task = Task(config['uin'], config['pwd'], config['al_id'], config['pushmethod'], config['sckey'], config['appToken'], config['wxpusheruid'], config['barkServer'], config['barkKey'], config['countrycode'])
@@ -428,5 +430,7 @@ def taskPool():
 '''
 if __name__ == '__main__':
     while True:
+        logging.info('10秒后程序启动')
+        time.sleep(10)
         Timer(0, taskPool, ()).start()
         time.sleep(60*60*24) # 间隔一天
